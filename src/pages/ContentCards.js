@@ -1,26 +1,63 @@
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import CustomContentCard from '../components/CustomContentCard';
+import * as braze from "@braze/web-sdk";
+
+
+// {
+    
+// 	"title": "Ready for the New Year?",
+	
+// 	"message": "Enter the code '2025' to get 25% off your next order.",
+	
+// 	"imageUrl": "https://cdn-staging.braze.com/appboy/communication/assets/image_assets/images/6756899b8b4b5c1f7e72688a/original.png?1733724570",
+	
+// 	"countdown": "2025-01-01T06:00:00.000",
+	
+// 	"timezone": "America/Chicago",
+	
+// 	"alt_text": "Happy New Year Image"
+	
+// }
 
 function ContentCards({ cards }) {
 
     useEffect(() => {
+        cards.forEach(card => {
+            if (card instanceof braze.CaptionedImage) {
+              console.log(`Card ID: ${card.id} is a CaptionedImage with title: ${card.title}`);
+            } else if (card instanceof braze.ClassicCard) {
+              console.log(`Card ID: ${card.id} is a ClassicCard with title: ${card.title}`);
+            } else if (card instanceof braze.ControlCard) {
+              console.log(`Card ID: ${card.id} is a ControlCard`);
+            } else {
+              console.log(`Card ID: ${card.id} is of unknown type`);
+            }
 
+            braze.logContentCardImpressions(card);
+          });
+          
+        braze.showContentCards(document.getElementById("standard-feed"))
     }, [])
 
     return (
         <ContentCardsContainer>
+
             <Feed>
                 <div>Custom Feed</div>
                 <Cards>
+                    {cards.map(card => <CustomContentCard extras={card.extras} key={card.id} imageUrl={card.imageUrl} title={card.title} description={card.description}></CustomContentCard>)}
                 </Cards>
             </Feed>
+            
+
             <Feed>
-                <div>Standard Feed</div>
+                <div>Out of the Box Feed</div>
                 <Cards>
                     <div id={'standard-feed'} />
                 </Cards>
             </Feed>
+
         </ContentCardsContainer>
     )
 }

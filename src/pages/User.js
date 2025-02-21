@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import TitledInputBox from '../components/TitledInputBox';
 import KeyValueInputBox from '../components/KeyValueInputBox';
+import * as braze from "@braze/web-sdk";
 
-function User() {
+function User({ cards }) {
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
     const [dateOfBirth, setDateOfBirth] = useState('')
@@ -31,19 +32,75 @@ function User() {
     const [purchasePropertyValue, setPurchasePropertyValue] = useState('')
 
     const setStandardAttributes = () => {
+        if(firstName) {
+            braze.getUser().setFirstName(firstName);
+        }
+        if(lastName) {
+            braze.getUser().setLastName(lastName);
+        }
+        if(dateOfBirth) {
+            const dob = dateOfBirth.split("/");
 
+            braze.getUser().setDateOfBirth(dob[2], dob[0], dob[1]);
+        }
+        if(email) {
+            braze.getUser().setEmail(email);
+        }
+        if(country) {
+            braze.getUser().setCountry(country);
+        }
+        if(homeCity) {
+            braze.getUser().setHomeCity(homeCity);
+        }
+        if(language) {
+            braze.getUser().setLanguage(language);
+        }
+        if(gender) {
+            braze.getUser().setGender(gender);
+        }
+        if(phoneNumber) {
+            braze.getUser().setPhoneNumber(phoneNumber);
+        }
+        if(pushNotificationSubscriptionType) {
+            braze.getUser().setPushNotificationSubscriptionType(pushNotificationSubscriptionType);
+        }
+        if(emailNotificationSubscriptionType) {
+            braze.getUser().setEmailNotificationSubscriptionType(emailNotificationSubscriptionType);
+        }
     }
 
     const setCustomAttribute = () => {
-
+        if(customAttributeKey && customAttributeValue) {
+            braze.getUser().setCustomUserAttribute(customAttributeKey, customAttributeValue, false); // we don't merge since our values will only be strings, not objs or arrays
+        }
     }
 
     const setCustomEvent = () => {
+        if(eventName) {
+            if(eventPropertyName && eventPropertyValue){
+                braze.logCustomEvent(eventName, {
+                    [eventPropertyName]: eventPropertyValue,
+                });
+            }
+            else {
+                braze.logCustomEvent(eventName);
+            }
+
+        }
 
     }
 
     const setPurchaseEvent = () => {
-
+        if(productId && price && currencyCode && quantity) {
+            if(purchasePropertyName && purchasePropertyValue) {
+                braze.logPurchase(productId, price, currencyCode, quantity, {
+                    [purchasePropertyName]: purchasePropertyValue
+                });
+            }
+            else {
+                braze.logPurchase(productId, price, currencyCode, quantity);
+            }
+        }
     }
 
     return (
