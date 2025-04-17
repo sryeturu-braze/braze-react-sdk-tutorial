@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
 import Navbar from './components/Navbar';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import User from './pages/User';
 import ContentCards from './pages/ContentCards';
 import * as braze from "@braze/web-sdk";
 
-console.log("her eit is" + process.env.REACT_APP_BRAZE_SDK_API_KEY);
+console.log("api key" + process.env.REACT_APP_BRAZE_SDK_API_KEY);
 
 // sandeepy
 braze.initialize(process.env.REACT_APP_BRAZE_SDK_API_KEY, {
@@ -19,16 +18,9 @@ braze.initialize(process.env.REACT_APP_BRAZE_SDK_API_KEY, {
 });
 
 braze.changeUser("sy-1");
-console.log(braze.getDeviceId())
 
 function App() {
   const [cards, setCards] = useState([]);
-  const [isPushPromptEligible, setIsPushPromptEligible] = useState(false);
-
-  const requestPushPermission = () => {
-    braze.requestPushPermission();
-    setIsPushPromptEligible(false);
-  }
 
   useEffect(() => {
     // once as new session happens or we call requestContentCards referesh, new cards will be update with this consumer
@@ -36,34 +28,13 @@ function App() {
       setCards(event.cards);
     });
 
-
-    // braze.subscribeToInAppMessage(function (inAppMessage) {
-      // if(inAppMessage instanceof braze.InAppMessage) {
-      //   const extras = inAppMessage.extras;
-
-      //   if(extras) {
-      //     for(const key in extras) {
-      //       if(key === 'display' && extras[key] === 'homepage') {
-                braze.showInAppMessage(inAppMessage);
-      //       }
-      //     }
-      //   }
-      // }
-    // })
-
-    // if(braze.isPushPermissionGranted() === false && braze.isPushBlocked() == false ) {
-    //   setIsPushPromptEligible(true);
-    // }
-
+    braze.requestContentCardsRefresh();
     braze.openSession();
   }, []);
 
   return (
     <Router>
       <Navbar />
-      <PushPermissionContainer>
-        <PushPermissionButton onClick={requestPushPermission} disabled={!isPushPromptEligible}>Request Push Permission</PushPermissionButton>
-      </PushPermissionContainer>
       <Routes>
         <Route path='/' element={<User cards={cards}/>} />
         <Route path='/contentcards' element={<ContentCards cards={cards} />} />
@@ -72,15 +43,5 @@ function App() {
   );
 }
 
-const PushPermissionContainer = styled.div`
-    display: flex;
-    flex-direction: row;
-    justify-content: end;
-`;
-
-const PushPermissionButton = styled.button`
-    margin-top: 20px;
-    margin-right: 20px;
-`;
 
 export default App;

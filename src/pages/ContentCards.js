@@ -1,98 +1,167 @@
-import React, { useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import styled from 'styled-components';
+import { RefreshCw } from 'lucide-react'; 
 import CustomContentCard from '../components/CustomContentCard';
 import * as braze from "@braze/web-sdk";
 
-
-// {
-    
-// 	"title": "Ready for the New Year?",
-	
-// 	"message": "Enter the code '2025' to get 25% off your next order.",
-	
-// 	"imageUrl": "https://cdn-staging.braze.com/appboy/communication/assets/image_assets/images/6756899b8b4b5c1f7e72688a/original.png?1733724570",
-	
-// 	"countdown": "2025-01-01T06:00:00.000",
-	
-// 	"timezone": "America/Chicago",
-	
-// 	"alt_text": "Happy New Year Image"
-	
-// }
-
 function ContentCards({ cards }) {
+    const [selectedThreadId, setSelectedThreadId] = useState(null);
+    const [pinnedThreads, setPinnedThreads] = useState({}); // { threadId: pinnedTimestamp }
 
     useEffect(() => {
+        const pinned = JSON.parse(localStorage.getItem('pinnedThreads')) || {};
+        setPinnedThreads(pinned);
+    }, []);
+
+    const savePinnedThreads = (updatedPinned) => {
+        localStorage.setItem('pinnedThreads', JSON.stringify(updatedPinned));
+        setPinnedThreads(updatedPinned);
+    };
+
+    const refreshCards = () => {
+        braze.requestContentCardsRefresh();
+    };
+
+    const latestCards = useMemo(() => {
+        const threadMap = {};
         cards.forEach(card => {
-            if (card instanceof braze.CaptionedImage) {
-              console.log(`Card ID: ${card.id} is a CaptionedImage with title: ${card.title}`);
-            } else if (card instanceof braze.ClassicCard) {
-              console.log(`Card ID: ${card.id} is a ClassicCard with title: ${card.title}`);
-            } else if (card instanceof braze.ControlCard) {
-              console.log(`Card ID: ${card.id} is a ControlCard`);
-            } else {
-              console.log(`Card ID: ${card.id} is of unknown type`);
+            const threadId = card.extras.threadId;
+            if (!threadMap[threadId] || new Date(card.created) > new Date(threadMap[threadId].created)) {
+                threadMap[threadId] = card;
             }
+        });
 
-            console.log(`dismissing card with id : ${card.id}`)
-            braze.logCardDismissal(card);
-          });
-          
-        //   const res = braze.logCardImpressions(cards)
-          
-          console.log("getting cached content cards")
-          console.log(braze.getCachedContentCards());
+        const allLatestCards = Object.values(threadMap);
 
-          console.log("requesting refresh")
-          braze.requestContentCardsRefresh();
+        const pinned = allLatestCards.filter(card => pinnedThreads[card.extras.threadId]);
+        const unpinned = allLatestCards.filter(card => !pinnedThreads[card.extras.threadId]);
 
+        pinned.sort((a, b) => pinnedThreads[b.extras.threadId] - pinnedThreads[a.extras.threadId]);
+        unpinned.sort((a, b) => new Date(b.created) - new Date(a.created));
 
-        // braze.showContentCards(document.getElementById("standard-feed"))
-    }, [])
+        return [...pinned, ...unpinned];
+    }, [cards, pinnedThreads]);
+
+    const threadMessages = useMemo(() => {
+        if (!selectedThreadId) return [];
+        return cards
+            .filter(card => card.extras.threadId === selectedThreadId)
+            .sort((a, b) => new Date(b.created) - new Date(a.created)); // chronological order
+    }, [selectedThreadId, cards]);
+
+    const togglePin = (threadId) => {
+        const updatedPinned = { ...pinnedThreads };
+        if (updatedPinned[threadId]) {
+            delete updatedPinned[threadId];
+        } else {
+            updatedPinned[threadId] = Date.now();
+        }
+        savePinnedThreads(updatedPinned);
+    };
 
     return (
-        <ContentCardsContainer>
-
-            <Feed>
-                <div>Custom Feed</div>
-                <Cards>
-                    {cards.map(card => <CustomContentCard extras={card.extras} key={card.id} imageUrl={card.imageUrl} title={card.title} description={card.description}></CustomContentCard>)}
-                </Cards>
-            </Feed>
-            
-
-            <Feed>
-                <div>Out of the Box Feed</div>
-                <Cards>
-                    <div id={'standard-feed'} />
-                </Cards>
-            </Feed>
-
-        </ContentCardsContainer>
-    )
+        <Container>
+            <Inbox>
+                <Header>
+                    <span>Messages</span>
+                    <RefreshButton onClick={refreshCards}>
+                        <RefreshCw size={20} />
+                    </RefreshButton>
+                </Header>
+                <CardList>
+                    {latestCards.map(card => (
+                        <CustomContentCard
+                            key={card.id}
+                            title={card.title}
+                            imageUrl={card.imageUrl}
+                            description={card.description}
+                            created={card.created}
+                            isActive={card.extras.threadId === selectedThreadId}
+                            isPinned={!!pinnedThreads[card.extras.threadId]}
+                            onClick={() => {
+                                if (selectedThreadId === card.extras.threadId) {
+                                    setSelectedThreadId(null);
+                                } else {
+                                    setSelectedThreadId(card.extras.threadId);
+                                }
+                            }}
+                            onPinToggle={() => togglePin(card.extras.threadId)}
+                        />
+                    ))}
+                </CardList>
+            </Inbox>
+            {selectedThreadId && (
+                <ThreadView>
+                    <Header>Thread</Header>
+                    <CardList>
+                        {threadMessages.map(card => (
+                            <CustomContentCard
+                                key={card.id}
+                                title={card.title}
+                                imageUrl={card.imageUrl}
+                                description={card.description}
+                                created={card.created}
+                                isThreadMessage
+                            />
+                        ))}
+                    </CardList>
+                </ThreadView>
+            )}
+        </Container>
+    );
 }
 
-const ContentCardsContainer = styled.div`
+export default ContentCards;
+
+// Styled Components
+
+const Container = styled.div`
     display: flex;
     flex-direction: row;
-    justify-content: space-evenly;
+    height: 100vh;
+    background-color: #f5f5f5;
 `;
 
-const Cards = styled.div`
-    margin-top: 20px;
+const Inbox = styled.div`
+    flex: 1;
+    border-right: 1px solid #d6d6d6;
+    overflow-y: auto;
+    background-color: #fff;
 `;
 
-const Feed = styled.div`
+const ThreadView = styled.div`
+    flex: 2;
+    overflow-y: auto;
+    background-color: #fff;
+`;
+
+const Header = styled.div`
+    font-size: 24px;
+    font-weight: bold;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #cc0000; /* CVS Red */
+    background: #fff;
+    border-bottom: 2px solid #cc0000;
+`;
+
+const CardList = styled.div`
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    font-size: 25px;
-    margin-top: 60px;
-    padding-top: 60px;
-    min-width: 400px;
-    padding: 10px;
-    border: 1px solid grey;
-    border-radius: 3px;
+    gap: 15px;
 `;
 
-export default ContentCards
+const RefreshButton = styled.button`
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #cc0000;
+    transition: transform 0.2s;
+
+    &:hover {
+        transform: rotate(90deg);
+    }
+`;
