@@ -34,10 +34,20 @@ function ContentCards({ cards }) {
               console.log(`Card ID: ${card.id} is of unknown type`);
             }
 
-            braze.logContentCardImpressions(card);
+            console.log(`dismissing card with id : ${card.id}`)
+            braze.logCardDismissal(card);
           });
           
-        braze.showContentCards(document.getElementById("standard-feed"))
+        //   const res = braze.logCardImpressions(cards)
+          
+          console.log("getting cached content cards")
+          console.log(braze.getCachedContentCards());
+
+          console.log("requesting refresh")
+          braze.requestContentCardsRefresh();
+
+
+        // braze.showContentCards(document.getElementById("standard-feed"))
     }, [])
 
     return (

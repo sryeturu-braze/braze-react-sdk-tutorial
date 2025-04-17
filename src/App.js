@@ -37,7 +37,7 @@ function App() {
     });
 
 
-    braze.subscribeToInAppMessage(function (inAppMessage) {
+    // braze.subscribeToInAppMessage(function (inAppMessage) {
       // if(inAppMessage instanceof braze.InAppMessage) {
       //   const extras = inAppMessage.extras;
 
@@ -49,11 +49,11 @@ function App() {
       //     }
       //   }
       // }
-    })
+    // })
 
-    if(braze.isPushPermissionGranted() === false && braze.isPushBlocked() == false ) {
-      setIsPushPromptEligible(true);
-    }
+    // if(braze.isPushPermissionGranted() === false && braze.isPushBlocked() == false ) {
+    //   setIsPushPromptEligible(true);
+    // }
 
     braze.openSession();
   }, []);
