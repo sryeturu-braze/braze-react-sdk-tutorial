@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import TitledInputBox from '../components/TitledInputBox';
 import KeyValueInputBox from '../components/KeyValueInputBox';
 import * as braze from "@braze/web-sdk";
 
-function User({ cards }) {
+function User({ }) {
+    const [externalUserId, setExternalUserId] = useState(braze.getUser().getUserId());
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
     const [dateOfBirth, setDateOfBirth] = useState('')
@@ -31,6 +32,13 @@ function User({ cards }) {
     const [purchasePropertyName, setPurchaseProperyName] = useState('')
     const [purchasePropertyValue, setPurchasePropertyValue] = useState('')
 
+    const changeExternalUserId = () => {
+        if (externalUserId) {
+            braze.changeUser(externalUserId);
+        }
+    };
+
+    
     const setStandardAttributes = () => {
         if(firstName) {
             braze.getUser().setFirstName(firstName);
@@ -106,6 +114,13 @@ function User({ cards }) {
     return (
         <UserContainer>
             <div>
+
+            <Title>External ID: {externalUserId}</Title>
+
+            <Title>Change Braze External ID</Title>
+<TitledInputBox title={'External User ID'} value={externalUserId} setValue={setExternalUserId} />
+<Button onClick={changeExternalUserId}>Set External ID</Button>
+
                 <Title>Standard Attributes</Title>
                 <TitledInputBox title={'First Name'} value={firstName} setValue={setFirstName} />
                 <TitledInputBox title={'Last Name'} value={lastName} setValue={setLastName} />

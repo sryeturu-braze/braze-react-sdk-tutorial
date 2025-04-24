@@ -1,14 +1,56 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Pin, PinOff } from 'lucide-react';
+import { Pin, PinOff, X } from 'lucide-react';
 
+
+function CustomContentCard({ title, description, imageUrl, created, isActive, isPinned, onClick, onPinToggle, isThreadMessage, card, handleDismiss }) {
+    const handlePinToggle = (e) => {
+        e.stopPropagation();
+        if (onPinToggle) {
+            onPinToggle();
+        }
+    };
+
+    return (
+        <CardContainer isActive={isActive} isThreadMessage={isThreadMessage} onClick={onClick}>
+            {!isThreadMessage && (
+                <DismissButton onClick={handleDismiss}>
+                    <X size={16} color="#f5a1a1" />
+                </DismissButton>
+            )}
+            <Content>
+                <TextContent>
+                    <TitleRow>
+                        <Title>{title}</Title>
+                        {isPinned && !isThreadMessage && <Badge>Pinned</Badge>}
+                    </TitleRow>
+                    {description && <Description>{description}</Description>}
+                    <MetaRow>
+                        {!isThreadMessage && (
+                            <PinButton onClick={handlePinToggle}>
+                                {isPinned ? (
+                                    <Pin size={18} color="#cc0000" fill="#cc0000" />
+                                ) : (
+                                    <PinOff size={18} color="#ccc" />
+                                )}
+                            </PinButton>
+                        )}
+                        {created && <CreatedDate>{formatDate(created)}</CreatedDate>}
+                    </MetaRow>
+                </TextContent>
+            </Content>
+        </CardContainer>
+    );
+}
+
+export default CustomContentCard;
+
+// Utilities
 function formatDate(dateString) {
     const date = new Date(dateString);
     const now = new Date();
-
     const isToday = date.toDateString() === now.toDateString();
-    const isYesterday = new Date(now.setDate(now.getDate() - 1)).toDateString() === date.toDateString();
-
+    const isYesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toDateString() === date.toDateString();
     const timeOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
 
     if (isToday) {
@@ -20,52 +62,12 @@ function formatDate(dateString) {
     }
 }
 
-
-function CustomContentCard({
-    title,
-    description,
-    imageUrl,
-    isActive,
-    isPinned,
-    onClick,
-    onPinToggle,
-    isThreadMessage,
-    created,
-}) {
-    const formattedDate = formatDate(new Date(created));
-
-    return (
-        <CardContainer isActive={isActive} isThreadMessage={isThreadMessage} onClick={onClick}>
-            <Content>
-                <TextContent>
-                    <TitleRow>
-                        <Title>{title}</Title>
-                        {isPinned && !isThreadMessage && <Badge>Pinned</Badge>}
-                    </TitleRow>
-                    {description && <Description>{description}</Description>}
-                    {/* Display human-readable created date */}
-                    {created && <CreatedDate>{formattedDate}</CreatedDate>}
-                </TextContent>
-            </Content>
-            {!isThreadMessage && (
-                <PinButton onClick={(e) => { 
-                    e.stopPropagation(); 
-                    onPinToggle(); 
-                }}>
-                    {isPinned ? <Pin fill="#cc0000" color="#cc0000" size={18} /> : <PinOff color="#999" size={18} />}
-                </PinButton>
-            )}
-        </CardContainer>
-    );
-}
-
-export default CustomContentCard;
-
 // Styled Components
 
 const CardContainer = styled.div`
+    position: relative;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     padding: 15px;
     border: 2px solid ${({ isActive }) => (isActive ? '#cc0000' : '#eee')};
@@ -74,6 +76,8 @@ const CardContainer = styled.div`
     box-shadow: ${({ isActive }) => (isActive ? '0 0 12px rgba(204, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.05)')};
     transition: all 0.3s ease;
     cursor: pointer;
+
+    max-width:850px;
 
     &:hover {
         transform: translateY(-2px);
@@ -85,6 +89,7 @@ const Content = styled.div`
     display: flex;
     align-items: center;
     flex: 1;
+    margin-top: 10px;
 `;
 
 const TextContent = styled.div`
@@ -111,25 +116,47 @@ const Description = styled.div`
     line-height: 1.4;
 `;
 
+const MetaRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 15px;
+`;
+
 const CreatedDate = styled.div`
     font-size: 12px;
     color: #999;
-    margin-top: 40px;
-    font-style: italic;
 `;
 
 const PinButton = styled.button`
     background: none;
     border: none;
     cursor: pointer;
-    padding: 5px;
-    margin-left: 10px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    padding: 2px;
+    opacity: 0.7;
+    transition: transform 0.2s;
 
     &:hover {
         transform: scale(1.2);
+        opacity: 1;
+    }
+`;
+
+const DismissButton = styled.button`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+
+    &:hover {
+        opacity: 1;
     }
 `;
 

@@ -4,7 +4,7 @@ import { RefreshCw } from 'lucide-react';
 import CustomContentCard from '../components/CustomContentCard';
 import * as braze from "@braze/web-sdk";
 
-function ContentCards({ cards }) {
+function ContentCards({ cards, removeCard }) {
     const [selectedThreadId, setSelectedThreadId] = useState(null);
     const [pinnedThreads, setPinnedThreads] = useState({}); // { threadId: pinnedTimestamp }
 
@@ -59,6 +59,7 @@ function ContentCards({ cards }) {
         savePinnedThreads(updatedPinned);
     };
 
+
     return (
         <Container>
             <Inbox>
@@ -78,6 +79,8 @@ function ContentCards({ cards }) {
                             created={card.created}
                             isActive={card.extras.threadId === selectedThreadId}
                             isPinned={!!pinnedThreads[card.extras.threadId]}
+                            card={card} // <<< passing card here
+                            handleDismiss={() => removeCard(card)} // <<< passing card here
                             onClick={() => {
                                 if (selectedThreadId === card.extras.threadId) {
                                     setSelectedThreadId(null);
@@ -101,6 +104,7 @@ function ContentCards({ cards }) {
                                 imageUrl={card.imageUrl}
                                 description={card.description}
                                 created={card.created}
+                                card={card} // <<< passing card here
                                 isThreadMessage
                             />
                         ))}
@@ -151,7 +155,7 @@ const CardList = styled.div`
     padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 25px;
 `;
 
 const RefreshButton = styled.button`
