@@ -18,7 +18,9 @@ braze.initialize(process.env.REACT_APP_BRAZE_SDK_API_KEY, {
 });
 
 function App() {
-  const [cards, setCards] = useState([]);
+
+  // 1) initialize state with cached cards
+  const [cards, setCards] = useState(braze.getCachedContentCards().cards);
 
   function removeCard(card) {
     braze.logCardDismissal(card);
@@ -29,11 +31,15 @@ function App() {
 
 
   useEffect(() => {
-    // once as new session happens or we call requestContentCards referesh, new cards will be update with this consumer
+
+    // Define callback that will get fired after a Content Card refresh
+
+    
     braze.subscribeToContentCardsUpdates(function (event) {
-      console.log("subscribeToContentCardsUpdates: " + event.cards.length);
+      console.log(event.cards);
       setCards(event.cards);
     });
+    
     braze.changeUser("sy-1")
     braze.openSession();
   }, []);

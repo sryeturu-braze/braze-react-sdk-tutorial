@@ -23,6 +23,9 @@ function ContentCards({ cards, removeCard }) {
     };
 
     const latestCards = useMemo(() => {
+        if(!cards) {
+            return [];
+        }
         const threadMap = {};
         cards.forEach(card => {
             const threadId = card.extras.threadId;
