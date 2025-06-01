@@ -5,8 +5,6 @@ import User from './pages/User';
 import ContentCards from './pages/ContentCards';
 import * as braze from "@braze/web-sdk";
 
-console.log("sdk api key" + process.env.REACT_APP_BRAZE_SDK_API_KEY);
-
 // sandeepy
 braze.initialize(process.env.REACT_APP_BRAZE_SDK_API_KEY, {
   baseUrl: "sondheim.braze.com",
@@ -18,7 +16,6 @@ braze.initialize(process.env.REACT_APP_BRAZE_SDK_API_KEY, {
 });
 
 function App() {
-
   // 1) initialize state with cached cards
   const [cards, setCards] = useState(braze.getCachedContentCards().cards);
 
@@ -29,14 +26,9 @@ function App() {
     setCards(updatedCards);
   }
 
-
   useEffect(() => {
-
     // Define callback that will get fired after a Content Card refresh
-
-    
     braze.subscribeToContentCardsUpdates(function (event) {
-      console.log(event.cards);
       setCards(event.cards);
     });
     
@@ -49,11 +41,10 @@ function App() {
       <Navbar />
       <Routes>
         <Route path='/' element={<User cards={cards}/>} />
-        <Route path='/contentcards' element={<ContentCards cards={cards} removeCard={removeCard} />} />
+        <Route path='/contentcards' element={<ContentCards cards={cards} setCards={setCards} removeCard={removeCard} />} />
       </Routes>
     </Router>
   );
 }
-
 
 export default App;

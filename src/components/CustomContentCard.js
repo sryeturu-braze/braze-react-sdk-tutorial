@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Pin, PinOff, X } from 'lucide-react';
 
 
-function CustomContentCard({ title, description, imageUrl, created, isActive, isPinned, onClick, onPinToggle, isThreadMessage, card, handleDismiss }) {
+function CustomContentCard({ title, description, imageUrl, created, isActive, isPinned, onClick, onPinToggle, isThreadMessage, card, handleDismiss, markAsViewed }) {
     const handlePinToggle = (e) => {
         e.stopPropagation();
         if (onPinToggle) {
@@ -11,8 +11,15 @@ function CustomContentCard({ title, description, imageUrl, created, isActive, is
         }
     };
 
+    const handleCardViewed = (e) => {
+        e.stopPropagation();
+        if (markAsViewed) {
+            markAsViewed(card.id);
+        }
+    };
+
     return (
-        <CardContainer isActive={isActive} isThreadMessage={isThreadMessage} onClick={onClick}>
+        <CardContainer isActive={isActive} isThreadMessage={isThreadMessage} viewed={card.viewed} onClick={onClick}>
             {!isThreadMessage && (
                 <DismissButton onClick={handleDismiss}>
                     <X size={16} color="#f5a1a1" />
@@ -27,6 +34,8 @@ function CustomContentCard({ title, description, imageUrl, created, isActive, is
                     {description && <Description>{description}</Description>}
                     <MetaRow>
                         {!isThreadMessage && (
+
+                            <>
                             <PinButton onClick={handlePinToggle}>
                                 {isPinned ? (
                                     <Pin size={18} color="#cc0000" fill="#cc0000" />
@@ -34,6 +43,11 @@ function CustomContentCard({ title, description, imageUrl, created, isActive, is
                                     <PinOff size={18} color="#ccc" />
                                 )}
                             </PinButton>
+                            <ViewedButton viewed={card.viewed} onClick={handleCardViewed}>
+    {card.viewed ? 'Viewed' : 'Mark as Viewed'}
+</ViewedButton>
+                                                        </>
+                        
                         )}
                         {created && <CreatedDate>{formatDate(created)}</CreatedDate>}
                     </MetaRow>
@@ -72,19 +86,17 @@ const CardContainer = styled.div`
     padding: 15px;
     border: 2px solid ${({ isActive }) => (isActive ? '#cc0000' : '#eee')};
     border-radius: 12px;
-    background-color: ${({ isActive }) => (isActive ? '#fff8f8' : '#fff')};
+    background-color: ${({ isActive, viewed }) => (isActive ? '#fff8f8' : viewed ? '#f0f0f0' : '#fff')};
     box-shadow: ${({ isActive }) => (isActive ? '0 0 12px rgba(204, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.05)')};
     transition: all 0.3s ease;
     cursor: pointer;
-
-    max-width:850px;
+    max-width: 850px;
 
     &:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
     }
 `;
-
 const Content = styled.div`
     display: flex;
     align-items: center;
@@ -169,4 +181,18 @@ const Badge = styled.div`
     border-radius: 999px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+`;
+
+const ViewedButton = styled.button`
+    background: none;
+    border: none;
+    cursor: ${({ viewed }) => (viewed ? 'default' : 'pointer')};
+    color: ${({ viewed }) => (viewed ? '#999' : '#cc0000')};
+    transition: transform 0.2s;
+    margin-left: 10px;
+    opacity: ${({ viewed }) => (viewed ? 0.5 : 1)};
+
+    &:hover {
+        transform: ${({ viewed }) => (viewed ? 'none' : 'scale(1.1)')};
+    }
 `;
