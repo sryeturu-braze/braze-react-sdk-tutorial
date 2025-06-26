@@ -17,6 +17,9 @@ function Navbar() {
                     <NavItem>
                         <NavLink to='/contentcards'>Content Cards</NavLink>
                     </NavItem>
+                    <NavItem>
+                        <NavLink to='/bannercards'>Banner Cards</NavLink>
+                    </NavItem>
                 </NavMenu>
             </NavContainer>
         </NavbarNav>

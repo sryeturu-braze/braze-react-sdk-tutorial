@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import User from './pages/User';
 import ContentCards from './pages/ContentCards';
 import * as braze from "@braze/web-sdk";
+import BannerCards from './pages/BannerCards';
 
 console.log("her eit is" + process.env.REACT_APP_BRAZE_SDK_API_KEY);
 
@@ -23,6 +24,8 @@ console.log(braze.getDeviceId())
 
 function App() {
   const [cards, setCards] = useState([]);
+  const [bannerCards, setBannerCards] = useState([]);
+
   const [isPushPromptEligible, setIsPushPromptEligible] = useState(false);
 
   const requestPushPermission = () => {
@@ -36,25 +39,40 @@ function App() {
       setCards(event.cards);
     });
 
+    braze.subscribeToBannersUpdates((_) => {
+      console.log("called subscribeToBannersUpdates()")
 
-    // braze.subscribeToInAppMessage(function (inAppMessage) {
-      // if(inAppMessage instanceof braze.InAppMessage) {
-      //   const extras = inAppMessage.extras;
+      const banners = braze.getAllBanners();
 
-      //   if(extras) {
-      //     for(const key in extras) {
-      //       if(key === 'display' && extras[key] === 'homepage') {
+      console.log(banners)
+      if(!banners) {
+        return;
+      }
+
+      setBannerCards(banners)
+    });
+    
+
+
+    braze.subscribeToInAppMessage(function (inAppMessage) {
+      if(inAppMessage instanceof braze.InAppMessage) {
+        const extras = inAppMessage.extras;
+
+        if(extras) {
+          for(const key in extras) {
+            if(key === 'display' && extras[key] === 'homepage') {
                 braze.showInAppMessage(inAppMessage);
-      //       }
-      //     }
-      //   }
-      // }
-    // })
+            }
+          }
+        }
+      }
+    })
 
-    // if(braze.isPushPermissionGranted() === false && braze.isPushBlocked() == false ) {
-    //   setIsPushPromptEligible(true);
-    // }
+    if(braze.isPushPermissionGranted() === false && braze.isPushBlocked() == false ) {
+      setIsPushPromptEligible(true);
+    }
 
+    braze.requestBannersRefresh(["placement_1", "placement_2", "placement_3"]);
     braze.openSession();
   }, []);
 
@@ -67,6 +85,7 @@ function App() {
       <Routes>
         <Route path='/' element={<User cards={cards}/>} />
         <Route path='/contentcards' element={<ContentCards cards={cards} />} />
+        <Route path='/bannercards' element={<BannerCards bannerCards={bannerCards} />} />
       </Routes>
     </Router>
   );
